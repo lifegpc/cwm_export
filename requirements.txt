@@ -1,2 +1,7 @@
 PyCryptodome
 semver
+ebooklib
+lxml
+python-magic
+python-magic-bin ; sys_platform == 'win32'
+requests

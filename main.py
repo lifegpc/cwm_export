@@ -17,6 +17,7 @@ parser.add_argument('-r', '--real', help='Use default locations. Needed running 
 parser.add_argument('-B', '--bid', '--book-id', help='The book id.', type=int)
 parser.add_argument('-t', '--type', help='Export type. Available types: epub, txt. Default: epub,txt')  # noqa: E501
 parser.add_argument('--ebt', '--export-book-template', help='The template of the exported book. Available key: <ext>, <book_id>, <book_name>, <author_name> eta.')  # noqa: E501
+parser.add_argument('--icd', '--image-cache-dir', help='Path to image cache directory.')  # noqa: E501
 parser.add_argument('action', help='The action to do.', choices=['importkey', 'exportchapter', 'exportbook'])  # noqa: E501
 
 

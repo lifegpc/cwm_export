@@ -35,6 +35,8 @@ class Config:
         if key in self._data:
             return self._data[key]
         else:
+            if default is not None:
+                self._data[key] = default
             return default
 
     @cached_property
@@ -89,6 +91,10 @@ class Config:
         for k in chapter.keys():
             temp = temp.replace(f'<{k}>', str(chapter[k]))
         return temp
+
+    @cached_property
+    def img_cache_dir(self):
+        return self.get_arg('img_cache_dir', 'img_cache')
 
     @cached_property
     def key(self):

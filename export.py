@@ -6,6 +6,7 @@ from booksnew import BooksNew
 from crypto import decrypt
 from os.path import dirname
 from os import makedirs
+from epub import EpubFile
 
 
 key_imported = False
@@ -56,6 +57,14 @@ def export_book(ncw: NovelCiwei, db: CwmDb, cfg: Config, bn: BooksNew,
         d = dirname(txt_filename)
         makedirs(d, exist_ok=True)
         txt = open(txt_filename, 'w', encoding='UTF-8')
+    if cfg.export_epub:
+        try:
+            epub = EpubFile(cfg, cfg.get_export_book(book, 'epub'))
+            epub.set_book(book)
+        except Exception as e:
+            if cfg.export_txt:
+                txt.close()
+            raise e
     try:
         chapters = ncw.get_chapter_with_bookid(book_id)
         divisions = ncw.get_divisions_with_bookid(book_id)
@@ -68,10 +77,13 @@ def export_book(ncw: NovelCiwei, db: CwmDb, cfg: Config, bn: BooksNew,
             else:
                 maps[division_id] = [chapter]
         for division in divisions:
+            division_name = division['division_name']
             if cfg.export_txt:
-                txt.write(f"第{division['division_index']}卷 {division['division_name']}\n")  # noqa: E501
+                txt.write(f"第{division['division_index']}卷 {division_name}\n")
                 if division['description']:
                     txt.write(division['description'] + '\n\n')
+            if cfg.export_epub and division['description']:
+                print('TODO: add division description to epub.')
             chapter_index = 1
             for chapter in maps[division['division_id']]:
                 if chapter['is_download']:
@@ -82,6 +94,8 @@ def export_book(ncw: NovelCiwei, db: CwmDb, cfg: Config, bn: BooksNew,
                     if cfg.export_txt:
                         txt.write(f"第{chapter_index}章 {chapter_title}\n")
                         txt.write(content + '\n\n')
+                    if cfg.export_epub:
+                        epub.add_chapter(chapter, content, division_name)
                     count += 1
                 else:
                     if cfg.export_txt:
@@ -91,3 +105,5 @@ def export_book(ncw: NovelCiwei, db: CwmDb, cfg: Config, bn: BooksNew,
     finally:
         if cfg.export_txt:
             txt.close()
+        if cfg.export_epub:
+            epub.save_epub_file()

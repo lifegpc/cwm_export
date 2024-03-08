@@ -13,10 +13,22 @@ class NovelCiwei:
         for i in cur:
             return json.loads(i[0])
 
+    def get_books(self):
+        cur = self._db.execute('SELECT * FROM shelf_book_info;')
+        cur.row_factory = sqlite3.Row
+        return cur.fetchall()
+
     def get_chapter_with_bookid(self, book_id: int):
         cur = self._db.execute(
             'SELECT * FROM catalog1 WHERE book_id = ? ORDER BY chapter_index;',
             [str(book_id)])
+        cur.row_factory = sqlite3.Row
+        return cur.fetchall()
+
+    def get_chapter_with_bookid_division(self, book_id: int, division_id: int):
+        cur = self._db.execute(
+            'SELECT * FROM catalog1 WHERE book_id = ? AND division_id = ? AND is_download = 1 ORDER BY chapter_index;',  # noqa: E501
+            [str(book_id), str(division_id)])
         cur.row_factory = sqlite3.Row
         return cur.fetchall()
 

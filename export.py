@@ -7,6 +7,9 @@ from crypto import decrypt
 from os.path import dirname
 from os import makedirs
 from epub import EpubFile
+from utils import ask_choice
+import json
+from random import choice
 
 
 key_imported = False
@@ -86,9 +89,9 @@ def export_book(ncw: NovelCiwei, db: CwmDb, cfg: Config, bn: BooksNew,
                 print('TODO: add division description to epub.')
             chapter_index = 1
             for chapter in maps[division['division_id']]:
+                chapter_id = chapter['chapter_id']
+                chapter_title = chapter['chapter_title']
                 if chapter['is_download']:
-                    chapter_id = chapter['chapter_id']
-                    chapter_title = chapter['chapter_title']
                     raw_content = bn.get_chapter(book_id, chapter_id)
                     content = try_decrypt(db, cfg, raw_content, chapter_id)
                     if cfg.export_txt:
@@ -107,3 +110,36 @@ def export_book(ncw: NovelCiwei, db: CwmDb, cfg: Config, bn: BooksNew,
             txt.close()
         if cfg.export_epub:
             epub.save_epub_file()
+
+
+def export(ncw: NovelCiwei, db: CwmDb, cfg: Config, bn: BooksNew):
+    action = ask_choice(cfg, [], '请选择要导出的类型：', extra=[
+                        ('b', '整本书', 'book'), ('c', '单章', 'chapter')])
+    books = ncw.get_books()
+    shelfs = {}
+    for book in books:
+        shelf_id = book['shelf_id']
+        if shelf_id in shelfs:
+            shelfs[shelf_id].append(book)
+        else:
+            shelfs[shelf_id] = [book]
+
+    def show_shelf(shelf: str):
+        data = f"{shelf} ({len(shelfs[shelf])} 本书)"
+        book = json.loads(choice(shelfs[shelf])['book_info'])
+        data += f"\n书架内有 {book['book_name']} - {book['author_name']}"
+        return data
+    shelf = ask_choice(cfg, [i for i in shelfs.keys()], '请选择书架：', show_shelf)
+    books = [json.loads(b['book_info']) for b in shelfs[shelf]]
+    book = ask_choice(cfg, books, '请选择书：', lambda b: f"{b['book_name']} - {b['author_name']}")  # noqa: E501
+    book_id = int(book['book_id'])
+    if action == 'book':
+        export_book(ncw, db, cfg, bn, book_id)
+    elif action == 'chapter':
+        divisions = ncw.get_divisions_with_bookid(book_id)
+        division = ask_choice(cfg, divisions, '请选择卷：', lambda b: b['division_name'])  # noqa: E501
+        division_id = int(division['division_id'])
+        chapters = ncw.get_chapter_with_bookid_division(book_id, division_id)
+        chapter = ask_choice(cfg, chapters, '请选择章节：', lambda b: b['chapter_title'])  # noqa: E501
+        chapter_id = int(chapter['chapter_id'])
+        export_chapter(ncw, db, cfg, bn, chapter_id)

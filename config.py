@@ -21,6 +21,7 @@ class Config:
             self._data['type'] = 'epub,txt'
             self._data['export_book_template'] = 'exported/<book_name> - <author_name>.<ext>'  # noqa: E501
             self._data['export_chapter_template'] = 'exported/<book_id>/<chapter_id>.txt'  # noqa: E501
+            self._data['page_size'] = 10
             self.save()
 
     def add_args(self, args: Namespace):
@@ -99,6 +100,10 @@ class Config:
     @cached_property
     def key(self):
         return self.get_arg('key', None)
+
+    @cached_property
+    def page_size(self):
+        return self.get_arg('page_size', 10)
 
     @cached_property
     def save_to_config(self):

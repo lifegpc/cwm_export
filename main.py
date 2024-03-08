@@ -18,7 +18,8 @@ parser.add_argument('-B', '--bid', '--book-id', help='The book id.', type=int)
 parser.add_argument('-t', '--type', help='Export type. Available types: epub, txt. Default: epub,txt')  # noqa: E501
 parser.add_argument('--ebt', '--export-book-template', help='The template of the exported book. Available key: <ext>, <book_id>, <book_name>, <author_name> eta.')  # noqa: E501
 parser.add_argument('--icd', '--image-cache-dir', help='Path to image cache directory.')  # noqa: E501
-parser.add_argument('action', help='The action to do.', choices=['importkey', 'exportchapter', 'exportbook'])  # noqa: E501
+parser.add_argument('-s', '--page-size', help='Maximum size of a page when asking for choices.', type=int)  # noqa: E501
+parser.add_argument('action', help='The action to do.', choices=['importkey', 'exportchapter', 'exportbook', 'export', 'ik', 'ec', 'eb', 'e'], nargs='?', default='export')  # noqa: E501
 
 
 def main(args=None):
@@ -32,12 +33,12 @@ def main(args=None):
     cfg.add_args(arg)
     try:
         db = CwmDb(cfg.db)
-        if arg.action == 'importkey':
+        if arg.action == 'importkey' or arg.action == 'ik':
             if cfg.key is None:
                 raise ValueError('The key is not specified.')
             from key import import_keys
             import_keys(cfg.key, db)
-        elif arg.action == 'exportchapter':
+        elif arg.action == 'exportchapter' or arg.action == 'ec':
             if cfg.cwmdb is None:
                 raise ValueError('The cwmdb is not specified.')
             ncw = NovelCiwei(cfg.cwmdb)
@@ -48,7 +49,7 @@ def main(args=None):
                 raise ValueError('The chapter id is not specified.')
             from export import export_chapter
             export_chapter(ncw, db, cfg, bn, cfg.chapter_id)
-        elif arg.action == 'exportbook':
+        elif arg.action == 'exportbook' or arg.action == 'eb':
             if cfg.cwmdb is None:
                 raise ValueError('The cwmdb is not specified.')
             ncw = NovelCiwei(cfg.cwmdb)
@@ -61,6 +62,17 @@ def main(args=None):
                 raise ValueError('At least one export type should be specified.')  # noqa: E501
             from export import export_book
             export_book(ncw, db, cfg, bn, cfg.book_id)
+        elif arg.action == 'export' or arg.action == 'e':
+            if cfg.cwmdb is None:
+                raise ValueError('The cwmdb is not specified.')
+            ncw = NovelCiwei(cfg.cwmdb)
+            if cfg.booksnew is None:
+                raise ValueError('The booksnew is not specified.')
+            bn = BooksNew(cfg.booksnew)
+            if not cfg.export_epub and not cfg.export_txt:
+                raise ValueError('At least one export type should be specified.')  # noqa: E501
+            from export import export
+            export(ncw, db, cfg, bn)
     finally:
         cfg.save()
 

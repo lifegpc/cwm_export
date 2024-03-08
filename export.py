@@ -81,14 +81,17 @@ def export_book(ncw: NovelCiwei, db: CwmDb, cfg: Config, bn: BooksNew,
                 maps[division_id] = [chapter]
         for division in divisions:
             division_name = division['division_name']
+            division_id = division['division_id']
             if cfg.export_txt:
                 txt.write(f"第{division['division_index']}卷 {division_name}\n")
                 if division['description']:
                     txt.write(division['description'] + '\n\n')
             if cfg.export_epub and division['description']:
                 print('TODO: add division description to epub.')
+            if division_id not in maps:
+                continue
             chapter_index = 1
-            for chapter in maps[division['division_id']]:
+            for chapter in maps[division_id]:
                 chapter_id = chapter['chapter_id']
                 chapter_title = chapter['chapter_title']
                 if chapter['is_download']:

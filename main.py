@@ -13,12 +13,18 @@ parser.add_argument('--cwmdb', help='The path to NovelCiwei file.')
 parser.add_argument('-b', '--booksnew', help='The path to booksnew directory or zip file.')  # noqa: E501
 parser.add_argument('-C', '--cid', '--chapter-id', help='The chapter id.', type=int)  # noqa: E501
 parser.add_argument('--ect', '--export-chapter-template', help='The template of the exported chapter. Available key: <book_id>, <chapter_id> eta.')  # noqa: E501
+parser.add_argument('-r', '--real', help='Use default locations. Needed running on Android machine. Root is required.', action='store_true')  # noqa: E501
 parser.add_argument('action', help='The action to do.', choices=['importkey', 'exportchapter'])  # noqa: E501
 
 
 def main(args=None):
     arg = parser.parse_intermixed_args(args)
     cfg = Config(arg.config)
+    if arg.real:
+        base_dir = '/data/data/com.kuangxiangciweimao.novel/'
+        arg.cwmdb = f'{base_dir}/databases/novelCiwei'
+        arg.key = f'{base_dir}/files/Y2hlcy8'
+        arg.booksnew = f'{base_dir}/files/novelCiwei/reader/booksnew'
     cfg.add_args(arg)
     try:
         db = CwmDb(cfg.db)

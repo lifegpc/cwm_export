@@ -11,12 +11,18 @@ from html.parser import HTMLParser
 try:
     import magic
     have_magic = True
+    have_filetype = False
 except ImportError:
     have_magic = False
-    print('Warning: python-magic not found. The mimetype in EPUB file may wrong.')  # noqa: E501
-    import platform
-    if platform.system() == "Windows":
-        print('python-magic-bin is also needed on Windows.')
+    try:
+        import filetype
+        have_filetype = True
+    except ImportError:
+        have_filetype = False
+        print('Warning: python-magic or filetype not found. The mimetype in EPUB file may wrong.')  # noqa: E501
+        import platform
+        if platform.system() == "Windows":
+            print('python-magic-bin is also needed on Windows if you use magic.')  # noqa: E501
 
 
 # Add fallback property to ebooklib
@@ -155,6 +161,10 @@ class HTMLImage:
             with open(self.path, 'rb') as f:
                 mime = magic.from_buffer(f.read(4096), True)
             self.epub_path = os.path.splitext(self.epub_path)[0] + get_extension(mime)  # noqa: E501
+        if have_filetype:
+            with open(self.path, 'rb') as f:
+                mime = filetype.guess_mime(f.read(4096))
+            self.epub_path = os.path.splitext(self.epub_path)[0] + get_extension(mime)  # noqa: E501
         d = {'src': self.epub_path}
         if self.alt:
             d['alt'] = self.alt
@@ -280,6 +290,9 @@ class EpubFile:
             cover = f.read()
         if have_magic:
             mime_type = magic.from_buffer(cover, mime=True)
+            file_name = 'cover' + get_extension(mime_type)
+        elif have_filetype:
+            mime_type = filetype.guess_mime(cover)
             file_name = 'cover' + get_extension(mime_type)
         else:
             file_name = 'cover.png'

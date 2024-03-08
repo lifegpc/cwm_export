@@ -18,6 +18,8 @@ class Config:
         else:
             self._data['db'] = 'cwm.db'
             self._data['save_to_config'] = True
+            self._data['type'] = 'epub,txt'
+            self._data['export_book_template'] = 'exported/<book_name> - <author_name>.<ext>'  # noqa: E501
             self._data['export_chapter_template'] = 'exported/<book_id>/<chapter_id>.txt'  # noqa: E501
             self.save()
 
@@ -36,6 +38,10 @@ class Config:
             return default
 
     @cached_property
+    def book_id(self):
+        return getattr(self._args, 'bid', None)
+
+    @cached_property
     def booksnew(self):
         return self.get_arg('booksnew', None)
 
@@ -52,8 +58,31 @@ class Config:
         return self.get_arg('db', 'cwm.db')
 
     @cached_property
+    def export_book_template(self):
+        return self.get_arg('export_book_template', 'exported/<book_name> - <author_name>.<ext>')  # noqa: E501
+
+    @cached_property
     def export_chapter_template(self):
         return self.get_arg('export_chapter_template', 'exported/<book_id>/<chapter_id>.txt')  # noqa: E501
+
+    @cached_property
+    def export_epub(self):
+        return self.export_type.find('epub') >= 0
+
+    @cached_property
+    def export_txt(self):
+        return self.export_type.find('txt') >= 0
+
+    @cached_property
+    def export_type(self):
+        return self.get_arg('type', 'epub,txt')
+
+    def get_export_book(self, book, ext):
+        temp = self.export_book_template
+        for k in book.keys():
+            temp = temp.replace(f'<{k}>', str(book[k]))
+        temp = temp.replace('<ext>', ext)
+        return temp
 
     def get_export_chapter(self, chapter):
         temp = self.export_chapter_template

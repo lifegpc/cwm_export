@@ -46,3 +46,48 @@ def export_chapter(ncw: NovelCiwei, db: CwmDb, cfg: Config, bn: BooksNew,
     with open(filename, 'w', encoding='UTF-8') as f:
         f.write(chapter['chapter_title'] + '\n')
         f.write(content)
+
+
+def export_book(ncw: NovelCiwei, db: CwmDb, cfg: Config, bn: BooksNew,
+                book_id: int):
+    book = ncw.get_book_in_shelf(book_id)
+    if cfg.export_txt:
+        txt_filename = cfg.get_export_book(book, 'txt')
+        d = dirname(txt_filename)
+        makedirs(d, exist_ok=True)
+        txt = open(txt_filename, 'w', encoding='UTF-8')
+    try:
+        chapters = ncw.get_chapter_with_bookid(book_id)
+        divisions = ncw.get_divisions_with_bookid(book_id)
+        maps = {}
+        count = 0
+        for chapter in chapters:
+            division_id = chapter['division_id']
+            if division_id in maps:
+                maps[division_id].append(chapter)
+            else:
+                maps[division_id] = [chapter]
+        for division in divisions:
+            if cfg.export_txt:
+                txt.write(f"第{division['division_index']}卷 {division['division_name']}\n")  # noqa: E501
+                if division['description']:
+                    txt.write(division['description'] + '\n\n')
+            chapter_index = 1
+            for chapter in maps[division['division_id']]:
+                if chapter['is_download']:
+                    chapter_id = chapter['chapter_id']
+                    chapter_title = chapter['chapter_title']
+                    raw_content = bn.get_chapter(book_id, chapter_id)
+                    content = try_decrypt(db, cfg, raw_content, chapter_id)
+                    if cfg.export_txt:
+                        txt.write(f"第{chapter_index}章 {chapter_title}\n")
+                        txt.write(content + '\n\n')
+                    count += 1
+                else:
+                    if cfg.export_txt:
+                        txt.write(f"第{chapter_index}章 {chapter_title} (未下载)\n\n")  # noqa: E501
+                chapter_index += 1
+        print(f'Exported {count} chapters.')
+    finally:
+        if cfg.export_txt:
+            txt.close()

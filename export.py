@@ -100,9 +100,11 @@ def export_book(ncw: NovelCiwei, db: CwmDb, cfg: Config, bn: BooksNew,
                     if cfg.export_epub:
                         epub.add_chapter(chapter, content, division_name)
                     count += 1
-                else:
+                elif cfg.export_nodownload:
                     if cfg.export_txt:
                         txt.write(f"第{chapter_index}章 {chapter_title} (未下载)\n\n")  # noqa: E501
+                    if cfg.export_epub:
+                        epub.add_nodownload_chapter(chapter, division_name)
                 chapter_index += 1
         print(f'Exported {count} chapters.')
     finally:

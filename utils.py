@@ -53,3 +53,13 @@ def ask_choice(cfg: Config, choices: list, prompt='请选择：', fn=None, extra
             if index < 0 or index >= count:
                 continue
             return choices[index]
+
+
+def parse_bool(s: str):
+    if s.lower() in ['y', 'yes', 'true', 't']:
+        return True
+    if s.lower() in ['n', 'no', 'false', 'f']:
+        return False
+    if s.isnumeric():
+        return bool(int(s))
+    raise ValueError(f"Unexpected bool value: {s}")

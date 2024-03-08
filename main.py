@@ -3,6 +3,7 @@ from config import Config
 from db import CwmDb
 from novelCiwei import NovelCiwei
 from booksnew import BooksNew
+from utils import parse_bool
 
 
 parser = ArgumentParser(description='A tool to export CiWeiMao novel cache.')
@@ -19,6 +20,7 @@ parser.add_argument('-t', '--type', help='Export type. Available types: epub, tx
 parser.add_argument('--ebt', '--export-book-template', help='The template of the exported book. Available key: <ext>, <book_id>, <book_name>, <author_name> eta.')  # noqa: E501
 parser.add_argument('--icd', '--image-cache-dir', help='Path to image cache directory.')  # noqa: E501
 parser.add_argument('-s', '--page-size', help='Maximum size of a page when asking for choices.', type=int)  # noqa: E501
+parser.add_argument('-a', '--export-nodownload', help='export not downloaded chapter when exporting book.', type=parse_bool)  # noqa: E501
 parser.add_argument('action', help='The action to do.', choices=['importkey', 'exportchapter', 'exportbook', 'export', 'ik', 'ec', 'eb', 'e'], nargs='?', default='export')  # noqa: E501
 
 

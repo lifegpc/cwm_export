@@ -360,6 +360,28 @@ class EpubFile:
             self.EpubList.append(ch)
         self.epub.spine.append(ch)
 
+    def add_nodownload_chapter(self, chapter, division_name: str):
+        chapter_title = chapter['chapter_title']
+        chapter_id = chapter['chapter_id']
+        ch = epub.EpubHtml(
+            title=f"{chapter_title} (未下载)",
+            file_name=f'ch{chapter_id}.xhtml',
+            lang='zh-CN',
+            uid=f'ch{chapter_id}',
+        )
+        if division_name == '作品相关':
+            ch.is_linear = False
+        ch.content = f'<h1 style="text-align: center;">{chapter_title}</h1>\n<p>本章未下载</p>'  # noqa: E501
+        self.epub.add_item(ch)
+        if self.last_division_name != division_name:
+            self.EpubList.append([epub.Link(ch.file_name, division_name), []])
+            self.last_division_name = division_name
+        if isinstance(self.EpubList[-1], list):
+            self.EpubList[-1][-1].append(ch)
+        else:
+            self.EpubList.append(ch)
+        self.epub.spine.append(ch)
+
     def save_epub_file(self):  # save epub file to local
         # the path to save epub file to local
         self.epub.toc = self.EpubList

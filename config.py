@@ -21,6 +21,8 @@ class Config:
             self._data['type'] = 'epub,txt'
             self._data['export_book_template'] = 'exported/<book_name> - <author_name>.<ext>'  # noqa: E501
             self._data['export_chapter_template'] = 'exported/<book_id>/<chapter_id>.txt'  # noqa: E501
+            self._data['export_nodownload'] = True
+            self._data['img_cache_dir'] = 'img_cache'
             self._data['page_size'] = 10
             self.save()
 
@@ -71,6 +73,10 @@ class Config:
     @cached_property
     def export_epub(self):
         return self.export_type.find('epub') >= 0
+
+    @cached_property
+    def export_nodownload(self):
+        return self.get_arg('export_nodownload', True)
 
     @cached_property
     def export_txt(self):

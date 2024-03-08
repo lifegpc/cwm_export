@@ -19,7 +19,7 @@ sudo python main.py --type=epub -r
 # Export all supported type
 sudo python main.py --type=epub,txt -r
 # Export single chapter with chapter id
-sudo python main.py ec -C <chapterid>
+sudo python main.py -r ec -C <chapterid>
 # Export book with book id
-sudo python main.py eb -B <bookid>
+sudo python main.py -r eb -B <bookid>
 ```

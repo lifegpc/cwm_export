@@ -134,8 +134,12 @@ def export(ncw: NovelCiwei, db: CwmDb, cfg: Config, bn: BooksNew):
         book = json.loads(choice(shelfs[shelf])['book_info'])
         data += f"\n书架内有 {book['book_name']} - {book['author_name']}"
         return data
-    shelf = ask_choice(cfg, [i for i in shelfs.keys()], '请选择书架：', show_shelf)
-    books = [json.loads(b['book_info']) for b in shelfs[shelf]]
+    shelf = ask_choice(cfg, [i for i in shelfs.keys()], '请选择书架：', show_shelf,
+                       [('r', '阅读历史', 'readhistory')])
+    if shelf == 'readhistory':
+        books = [json.loads(b['book_info']) for b in ncw.get_read_history()]
+    else:
+        books = [json.loads(b['book_info']) for b in shelfs[shelf]]
     book = ask_choice(cfg, books, '请选择书：', lambda b: f"{b['book_name']} - {b['author_name']}")  # noqa: E501
     book_id = int(book['book_id'])
     if action == 'book':

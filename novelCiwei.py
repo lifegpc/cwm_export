@@ -42,3 +42,9 @@ class NovelCiwei:
             'SELECT * FROM catalog1 WHERE chapter_id = ?;', [str(chapter_id)])
         cur.row_factory = sqlite3.Row
         return cur.fetchone()
+
+    def get_read_history(self):
+        cur = self._db.execute(
+            'SELECT * FROM read_history ORDER BY readtime DESC;')
+        cur.row_factory = sqlite3.Row
+        return cur.fetchall()

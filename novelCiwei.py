@@ -13,6 +13,13 @@ class NovelCiwei:
         for i in cur:
             return json.loads(i[0])
 
+    def get_book_in_readhistory(self, book_id: int):
+        cur = self._db.execute(
+            'SELECT book_info FROM read_history WHERE book_id = ?;',
+            [str(book_id)])
+        for i in cur:
+            return json.loads(i[0])
+
     def get_books(self):
         cur = self._db.execute('SELECT * FROM shelf_book_info;')
         cur.row_factory = sqlite3.Row

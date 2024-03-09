@@ -55,6 +55,10 @@ def export_chapter(ncw: NovelCiwei, db: CwmDb, cfg: Config, bn: BooksNew,
 def export_book(ncw: NovelCiwei, db: CwmDb, cfg: Config, bn: BooksNew,
                 book_id: int):
     book = ncw.get_book_in_shelf(book_id)
+    if book is None:
+        book = ncw.get_book_in_readhistory(book_id)
+    if book is None:
+        raise ValueError('The book is not found.')
     if cfg.export_txt:
         txt_filename = cfg.get_export_book(book, 'txt')
         d = dirname(txt_filename)

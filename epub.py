@@ -140,7 +140,7 @@ class HTMLImage:
         self.cfg = cfg
 
     def is_valid(self):
-        return self.src is not None
+        return self.src is not None and self.src != ''
 
     def download_image(self):
         if not self.is_valid():

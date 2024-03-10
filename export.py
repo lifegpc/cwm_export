@@ -121,9 +121,23 @@ def export_book(ncw: NovelCiwei, db: CwmDb, cfg: Config, bn: BooksNew,
             epub.save_epub_file()
 
 
+def export_all(ncw: NovelCiwei, db: CwmDb, cfg: Config, bn: BooksNew):
+    books = ncw.get_all_books()
+    for book in books:
+        book_id = int(book[0])
+        try:
+            export_book(ncw, db, cfg, bn, book_id)
+        except Exception as e:
+            print(f'Failed to export book {book_id}: {e}')
+
+
 def export(ncw: NovelCiwei, db: CwmDb, cfg: Config, bn: BooksNew):
     action = ask_choice(cfg, [], '请选择要导出的类型：', extra=[
-                        ('b', '整本书', 'book'), ('c', '单章', 'chapter')])
+                        ('b', '整本书', 'book'), ('c', '单章', 'chapter'),
+                        ('a', '所有书', 'all')])
+    if action == 'all':
+        export_all(ncw, db, cfg, bn)
+        return
     books = ncw.get_books()
     shelfs = {}
     for book in books:
@@ -139,9 +153,16 @@ def export(ncw: NovelCiwei, db: CwmDb, cfg: Config, bn: BooksNew):
         data += f"\n书架内有 {book['book_name']} - {book['author_name']}"
         return data
     shelf = ask_choice(cfg, [i for i in shelfs.keys()], '请选择书架：', show_shelf,
-                       [('r', '阅读历史', 'readhistory')])
+                       [('r', '阅读历史', 'readhistory'), ('a', '所有书', 'all')])
     if shelf == 'readhistory':
         books = [json.loads(b['book_info']) for b in ncw.get_read_history()]
+    elif shelf == 'all':
+        bookids = [int(b[0]) for b in ncw.get_all_books()]
+        books = []
+        for bid in bookids:
+            book = ncw.get_book_in_shelf(bid) or ncw.get_book_in_readhistory(bid)  # noqa: E501
+            if book:
+                books.append(book)
     else:
         books = [json.loads(b['book_info']) for b in shelfs[shelf]]
     book = ask_choice(cfg, books, '请选择书：', lambda b: f"{b['book_name']} - {b['author_name']}")  # noqa: E501

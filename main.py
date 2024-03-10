@@ -21,7 +21,7 @@ parser.add_argument('--ebt', '--export-book-template', help='The template of the
 parser.add_argument('--icd', '--image-cache-dir', help='Path to image cache directory.')  # noqa: E501
 parser.add_argument('-s', '--page-size', help='Maximum size of a page when asking for choices.', type=int)  # noqa: E501
 parser.add_argument('-a', '--export-nodownload', help='export not downloaded chapter when exporting book.', type=parse_bool)  # noqa: E501
-parser.add_argument('action', help='The action to do.', choices=['importkey', 'exportchapter', 'exportbook', 'export', 'ik', 'ec', 'eb', 'e'], nargs='?', default='export')  # noqa: E501
+parser.add_argument('action', help='The action to do.', choices=['importkey', 'exportchapter', 'exportbook', 'export', 'exportall', 'ik', 'ec', 'eb', 'e', 'ea'], nargs='?', default='export')  # noqa: E501
 
 
 def main(args=None):
@@ -75,6 +75,17 @@ def main(args=None):
                 raise ValueError('At least one export type should be specified.')  # noqa: E501
             from export import export
             export(ncw, db, cfg, bn)
+        elif arg.action == "exportall" or arg.action == "ea":
+            if cfg.cwmdb is None:
+                raise ValueError('The cwmdb is not specified.')
+            ncw = NovelCiwei(cfg.cwmdb)
+            if cfg.booksnew is None:
+                raise ValueError('The booksnew is not specified.')
+            bn = BooksNew(cfg.booksnew)
+            if not cfg.export_epub and not cfg.export_txt:
+                raise ValueError('At least one export type should be specified.')  # noqa: E501
+            from export import export_all
+            export_all(ncw, db, cfg, bn)
     finally:
         cfg.save()
 

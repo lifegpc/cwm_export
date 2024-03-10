@@ -20,6 +20,10 @@ class NovelCiwei:
         for i in cur:
             return json.loads(i[0])
 
+    def get_all_books(self):
+        cur = self._db.execute('SELECT book_id, COUNT(*) FROM catalog1 WHERE is_download = 1 GROUP BY book_id;')  # noqa: E501
+        return cur.fetchall()
+
     def get_books(self):
         cur = self._db.execute('SELECT * FROM shelf_book_info;')
         cur.row_factory = sqlite3.Row

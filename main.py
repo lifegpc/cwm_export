@@ -7,20 +7,20 @@ from utils import parse_bool
 
 
 parser = ArgumentParser(description='A tool to export CiWeiMao novel cache.')
-parser.add_argument('-c', '--config', help='The path of the config file.', default='config.json')  # noqa: E501
-parser.add_argument('-d', '--db', help='The path of the database file.')
-parser.add_argument('-k', '--key', help='The path to Y2hlcy8 key directory or zip file.')  # noqa: E501
-parser.add_argument('--cwmdb', help='The path to NovelCiwei file.')
-parser.add_argument('-b', '--booksnew', help='The path to booksnew directory or zip file.')  # noqa: E501
-parser.add_argument('-C', '--cid', '--chapter-id', help='The chapter id.', type=int)  # noqa: E501
-parser.add_argument('--ect', '--export-chapter-template', help='The template of the exported chapter. Available key: <book_id>, <chapter_id> eta.')  # noqa: E501
+parser.add_argument('-c', '--config', help='The path of the config file.', default='config.json', metavar='PATH')  # noqa: E501
+parser.add_argument('-d', '--db', help='The path of the database file.', metavar='PATH')  # noqa: E501
+parser.add_argument('-k', '--key', help='The path to Y2hlcy8 key directory or zip file.', metavar='PATH')  # noqa: E501
+parser.add_argument('--cwmdb', help='The path to NovelCiwei file.', metavar='PATH')  # noqa: E501
+parser.add_argument('-b', '--booksnew', help='The path to booksnew directory or zip file.', metavar='PATH')  # noqa: E501
+parser.add_argument('-C', '--cid', '--chapter-id', help='The chapter id.', type=int, metavar='ID')  # noqa: E501
+parser.add_argument('--ect', '--export-chapter-template', help='The template of the exported chapter. Available key: <book_id>, <chapter_id> eta.', metavar='PATH')  # noqa: E501
 parser.add_argument('-r', '--real', help='Use default locations. Needed running on Android machine. Root is required.', action='store_true')  # noqa: E501
-parser.add_argument('-B', '--bid', '--book-id', help='The book id.', type=int)
+parser.add_argument('-B', '--bid', '--book-id', help='The book id.', type=int, metavar='ID')  # noqa: E501
 parser.add_argument('-t', '--type', help='Export type. Available types: epub, txt. Default: epub,txt')  # noqa: E501
-parser.add_argument('--ebt', '--export-book-template', help='The template of the exported book. Available key: <ext>, <book_id>, <book_name>, <author_name> eta.')  # noqa: E501
-parser.add_argument('--icd', '--image-cache-dir', help='Path to image cache directory.')  # noqa: E501
-parser.add_argument('-s', '--page-size', help='Maximum size of a page when asking for choices.', type=int)  # noqa: E501
-parser.add_argument('-a', '--export-nodownload', help='export not downloaded chapter when exporting book.', type=parse_bool)  # noqa: E501
+parser.add_argument('--ebt', '--export-book-template', help='The template of the exported book. Available key: <ext>, <book_id>, <book_name>, <author_name> eta.', metavar='TEMPLATE')  # noqa: E501
+parser.add_argument('--icd', '--image-cache-dir', help='Path to image cache directory.', metavar='PATH')  # noqa: E501
+parser.add_argument('-s', '--page-size', help='Maximum size of a page when asking for choices.', type=int, metavar='SIZE')  # noqa: E501
+parser.add_argument('-a', '--export-nodownload', help='export not downloaded chapter when exporting book.', type=parse_bool, metavar='BOOL')  # noqa: E501
 parser.add_argument('action', help='The action to do.', choices=['importkey', 'exportchapter', 'exportbook', 'export', 'exportall', 'ik', 'ec', 'eb', 'e', 'ea'], nargs='?', default='export')  # noqa: E501
 
 

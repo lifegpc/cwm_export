@@ -22,4 +22,6 @@ sudo python main.py --type=epub,txt -r
 sudo python main.py -r ec -C <chapterid>
 # Export book with book id
 sudo python main.py -r eb -B <bookid>
+# Export all books
+sudo python main.py -r ea
 ```

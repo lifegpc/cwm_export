@@ -24,6 +24,7 @@ class Config:
             self._data['export_nodownload'] = True
             self._data['img_cache_dir'] = 'img_cache'
             self._data['page_size'] = 10
+            self._data['image_type'] = 'inline'
             self.save()
 
     def add_args(self, args: Namespace):
@@ -102,6 +103,10 @@ class Config:
     @cached_property
     def img_cache_dir(self):
         return self.get_arg('img_cache_dir', 'img_cache')
+
+    @cached_property
+    def image_type(self):
+        return self.get_arg('image_type', 'inline')
 
     @cached_property
     def key(self):

@@ -150,6 +150,7 @@ class HTMLImage:
             elif key == 'alt':
                 self.alt = value
         self.cfg = cfg
+        self.footnote = ''
 
     def is_valid(self):
         return self.src is not None and self.src != ''
@@ -163,7 +164,7 @@ class HTMLImage:
         except Exception:
             print_exc()
 
-    def to_local(self):
+    def to_local(self, index: int):
         if not self.is_valid():
             return ""
         if not self.download_image():
@@ -180,7 +181,21 @@ class HTMLImage:
         d = {'src': self.epub_path}
         if self.alt:
             d['alt'] = self.alt
-        return ET.tostring(ET.Element('img', d), 'unicode')
+        img = ET.Element('img', d)
+        if self.cfg.image_type == 'inline':
+            return ET.tostring(img, 'unicode')
+        else:
+            link = ET.Element('a', {'href': f'#img{index}',
+                                    'epub:type': 'noteref'})
+            if self.alt:
+                link.text = self.alt
+            aside = ET.Element('aside', {'epub:type': 'footnote',
+                                         'id': f'img{index}'})
+            p = ET.Element('p')
+            p.append(img)
+            aside.append(p)
+            self.footnote = ET.tostring(aside, 'unicode') + '\n'
+            return ET.tostring(link, 'unicode')
 
 
 # Used to parse content
@@ -193,6 +208,7 @@ class ContentParser(HTMLParser):
         self.images = []
         self._paragraph_data = ''
         self.cfg = cfg
+        self.footnote = ''
 
     def handle_data(self, data: str):
         if self._in_paragraph:
@@ -241,12 +257,15 @@ class ContentParser(HTMLParser):
                     return True
         return False
 
-    def to_local(self, data_list=None) -> str:
+    def to_local(self, data_list=None, root=None) -> str:
         default_data_list = False
         if data_list is None:
             data_list = self.data
             default_data_list = True
+            root = self
+            self.footnote = ''
         data = ''
+        img_index = 0
         for i in data_list:
             if isinstance(i, str):
                 if default_data_list:
@@ -256,16 +275,21 @@ class ContentParser(HTMLParser):
             elif isinstance(i, HTMLImage):
                 if i.is_valid():
                     try:
-                        data += i.to_local()
+                        data += i.to_local(img_index)
                         self.images.append(i)
+                        if i.footnote:
+                            root.footnote += i.footnote
+                        img_index += 1
                     except ValueError:
                         print("the image is not valid.", i.src)
             elif isinstance(i, list):
-                data += f'<p>{self.to_local(i)}</p>\n'
+                data += f'<p>{self.to_local(i, self)}</p>\n'
             else:
                 raise NotImplementedError()
         if self._paragraph_data:
             data += f'<p>{self._paragraph_data}</p>\n'
+        if default_data_list:
+            data += self.footnote
         return data
 
 

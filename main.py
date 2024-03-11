@@ -21,6 +21,7 @@ parser.add_argument('--ebt', '--export-book-template', help='The template of the
 parser.add_argument('--icd', '--image-cache-dir', help='Path to image cache directory.', metavar='PATH')  # noqa: E501
 parser.add_argument('-s', '--page-size', help='Maximum size of a page when asking for choices.', type=int, metavar='SIZE')  # noqa: E501
 parser.add_argument('-a', '--export-nodownload', help='export not downloaded chapter when exporting book.', type=parse_bool, metavar='BOOL')  # noqa: E501
+parser.add_argument('-i', '--image-type', help='How to handle images in EPUB. Available types: inline, footnote. Default: inline', choices=['inline', 'footnote'], metavar='TYPE')  # noqa: E501
 parser.add_argument('action', help='The action to do.', choices=['importkey', 'exportchapter', 'exportbook', 'export', 'exportall', 'ik', 'ec', 'eb', 'e', 'ea'], nargs='?', default='export')  # noqa: E501
 
 

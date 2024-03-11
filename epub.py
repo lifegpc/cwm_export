@@ -45,6 +45,18 @@ class EpubImage(EpubItem):
         return '<EpubImage:%s:%s>' % (self.id, self.file_name)
 
 
+class EpubPathImage(EpubImage):
+    def __init__(self):
+        super().__init__()
+        self.path = None
+
+    def get_content(self, default=b''):
+        if self.path:
+            with open(self.path, 'rb') as f:
+                return f.read()
+        return default
+
+
 class EpubWriter(epub.EpubWriter):
     def _write_opf_manifest(self, root):
         manifest = epub.etree.SubElement(root, 'manifest')
@@ -331,22 +343,18 @@ class EpubFile:
         self.epub.add_item(ch)
         count = 0
         for oimg in parser.images:
-            with open(oimg.path, 'rb') as f:
-                img_content = f.read()
-            img = EpubImage()
+            img = EpubPathImage()
             img.file_name = oimg.epub_path
-            img.content = img_content
+            img.path = oimg.path
             img.id = f'i{chapter_id}_{count}'
             self.epub.add_item(img)
             if oimg.epub_path.endswith('.webp'):
                 img.media_type = 'image/webp'
                 jpg_path = perform_convert(oimg.path)
                 if jpg_path is not None:
-                    jpg_img = epub.EpubImage()
-                    with open(jpg_path, 'rb') as f:
-                        jpg_content = f.read()
+                    jpg_img = EpubPathImage()
                     jpg_img.file_name = os.path.basename(jpg_path)
-                    jpg_img.content = jpg_content
+                    jpg_img.path = jpg_path
                     jpg_img.id = img.id + 'f'
                     img.fallback = jpg_img.id
                     self.epub.add_item(jpg_img)

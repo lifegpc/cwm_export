@@ -209,6 +209,7 @@ class ContentParser(HTMLParser):
         self._paragraph_data = ''
         self.cfg = cfg
         self.footnote = ''
+        self.img_index = 0
 
     def handle_data(self, data: str):
         if self._in_paragraph:
@@ -265,7 +266,6 @@ class ContentParser(HTMLParser):
             root = self
             self.footnote = ''
         data = ''
-        img_index = 0
         for i in data_list:
             if isinstance(i, str):
                 if default_data_list:
@@ -275,11 +275,11 @@ class ContentParser(HTMLParser):
             elif isinstance(i, HTMLImage):
                 if i.is_valid():
                     try:
-                        data += i.to_local(img_index)
+                        data += i.to_local(root.img_index)
                         self.images.append(i)
                         if i.footnote:
                             root.footnote += i.footnote
-                        img_index += 1
+                        root.img_index += 1
                     except ValueError:
                         print("the image is not valid.", i.src)
             elif isinstance(i, list):

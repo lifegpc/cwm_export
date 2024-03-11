@@ -349,7 +349,7 @@ class EpubFile:
         chapter_id = chapter['chapter_id']
         ch = epub.EpubHtml(
             title=chapter_title,
-            file_name=f'ch{chapter_id}.xhtml',
+            file_name=f'{chapter_id}.xhtml',
             lang='zh-CN',
             uid=f'ch{chapter_id}',
         )

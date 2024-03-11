@@ -283,7 +283,7 @@ class ContentParser(HTMLParser):
                     except ValueError:
                         print("the image is not valid.", i.src)
             elif isinstance(i, list):
-                data += f'<p>{self.to_local(i, self)}</p>\n'
+                data += f'<p>{self.to_local(i, root)}</p>\n'
             else:
                 raise NotImplementedError()
         if self._paragraph_data:

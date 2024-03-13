@@ -13,15 +13,18 @@ from random import choice
 
 
 key_imported = False
+key_force_imported = False
 
 
 def get_key(db: CwmDb, cfg: Config, chapter_id: int):
+    global key_imported
     keys = db.get_key(chapter_id)
     if len(keys) == 0:
         if key_imported:
             raise ValueError('The key is not found.')
         else:
             import_keys(cfg.key, db)
+            key_imported = True
         keys = db.get_key(chapter_id)
         if len(keys) == 0:
             raise ValueError('The key is not found.')
@@ -29,12 +32,17 @@ def get_key(db: CwmDb, cfg: Config, chapter_id: int):
 
 
 def try_decrypt(db: CwmDb, cfg: Config, content, chapter_id: int):
+    global key_force_imported
     keys = get_key(db, cfg, chapter_id)
     for key in keys:
         try:
             return decrypt(content, key).decode()
         except Exception:
             pass
+    if not key_force_imported:
+        import_keys(cfg.key, db, True)
+        key_force_imported = True
+        return try_decrypt(db, cfg, content, chapter_id)
     raise ValueError('Failed to decrypt the content.')
 
 

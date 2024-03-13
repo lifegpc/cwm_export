@@ -1,6 +1,6 @@
 import sqlite3
 from semver import Version
-from typing import Optional, Set, List
+from typing import Dict, Optional, List
 
 
 VERSION_TABLE = '''CREATE TABLE version (
@@ -67,9 +67,9 @@ class CwmDb:
         self._db.execute('INSERT OR REPLACE INTO key VALUES (?, ?, ?);', [
                          chapter_id, user_id, key])
 
-    def get_all_keys_as_origin(self) -> Set[str]:
-        cur = self._db.execute('SELECT chapter_id, user_id FROM key;')
-        return {f'{i[0]}{i[1]}' for i in cur}
+    def get_all_keys_as_origin(self) -> Dict[str, str]:
+        cur = self._db.execute('SELECT chapter_id, user_id, key FROM key;')
+        return {f'{i[0]}{i[1]}': i[2] for i in cur}
 
     def get_key(self, chapter_id: int) -> List[str]:
         cur = self._db.execute('SELECT key FROM key WHERE chapter_id = ?;', [

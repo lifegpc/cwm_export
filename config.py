@@ -87,6 +87,10 @@ class Config:
     def export_type(self):
         return self.get_arg('type', 'epub,txt')
 
+    @cached_property
+    def force(self):
+        return getattr(self._args, 'force', False)
+
     def get_export_book(self, book, ext):
         temp = self.export_book_template
         for k in book.keys():

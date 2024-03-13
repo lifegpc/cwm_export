@@ -5,7 +5,7 @@ from zipfile import ZipFile
 from base64 import b64decode
 
 
-def import_keys(key: str, db: CwmDb):
+def import_keys(key: str, db: CwmDb, force=False):
     is_zip = False
     file_list = []
     contain_dir_name = False
@@ -25,7 +25,8 @@ def import_keys(key: str, db: CwmDb):
         for i in file_list:
             oid = b64decode(i).decode()
             if oid in keys:
-                continue
+                if not force:
+                    continue
             cid = int(oid[0:9])
             uid = int(oid[9:])
             if is_zip:
@@ -36,6 +37,8 @@ def import_keys(key: str, db: CwmDb):
                 content = z.read(path).decode()
             else:
                 content = open(join(key, i), 'r', encoding='UTF-8').read()
+            if oid in keys and content == keys[oid]:
+                continue
             db.add_key(cid, uid, content)
             count += 1
         print(f'Imported {count} keys.')

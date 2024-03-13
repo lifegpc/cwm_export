@@ -22,6 +22,7 @@ parser.add_argument('--icd', '--image-cache-dir', help='Path to image cache dire
 parser.add_argument('-s', '--page-size', help='Maximum size of a page when asking for choices.', type=int, metavar='SIZE')  # noqa: E501
 parser.add_argument('-a', '--export-nodownload', help='export not downloaded chapter when exporting book.', type=parse_bool, metavar='BOOL')  # noqa: E501
 parser.add_argument('-i', '--image-type', help='How to handle images in EPUB. Available types: inline, footnote. Default: inline', choices=['inline', 'footnote'], metavar='TYPE')  # noqa: E501
+parser.add_argument('-f', '--force', help='Force import keys.', action='store_true')  # noqa: E501
 parser.add_argument('action', help='The action to do.', choices=['importkey', 'exportchapter', 'exportbook', 'export', 'exportall', 'ik', 'ec', 'eb', 'e', 'ea'], nargs='?', default='export')  # noqa: E501
 
 
@@ -40,7 +41,7 @@ def main(args=None):
             if cfg.key is None:
                 raise ValueError('The key is not specified.')
             from key import import_keys
-            import_keys(cfg.key, db)
+            import_keys(cfg.key, db, cfg.force)
         elif arg.action == 'exportchapter' or arg.action == 'ec':
             if cfg.cwmdb is None:
                 raise ValueError('The cwmdb is not specified.')

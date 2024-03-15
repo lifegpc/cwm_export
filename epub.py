@@ -344,7 +344,8 @@ class EpubFile:
         self.epub.spine.append(intro)
         self.last_division_name = ''
 
-    def add_chapter(self, chapter, content: str, division_name: str):
+    def add_chapter(self, chapter, content: str, division_name: str,
+                    is_linear: bool):
         chapter_title = chapter['chapter_title']
         chapter_id = chapter['chapter_id']
         ch = epub.EpubHtml(
@@ -353,8 +354,7 @@ class EpubFile:
             lang='zh-CN',
             uid=f'ch{chapter_id}',
         )
-        if division_name == '作品相关':
-            ch.is_linear = False
+        ch.is_linear = is_linear
         parser = ContentParser(self.cfg)
         contents = content.splitlines()
         try:
@@ -392,7 +392,8 @@ class EpubFile:
             self.EpubList.append(ch)
         self.epub.spine.append(ch)
 
-    def add_nodownload_chapter(self, chapter, division_name: str):
+    def add_nodownload_chapter(self, chapter, division_name: str,
+                               is_linear: bool):
         chapter_title = chapter['chapter_title']
         chapter_id = chapter['chapter_id']
         ch = epub.EpubHtml(
@@ -401,8 +402,7 @@ class EpubFile:
             lang='zh-CN',
             uid=f'ch{chapter_id}',
         )
-        if division_name == '作品相关':
-            ch.is_linear = False
+        ch.is_linear = is_linear
         ch.content = f'<h1 style="text-align: center;">{chapter_title}</h1>\n<p>本章未下载</p>'  # noqa: E501
         self.epub.add_item(ch)
         if self.last_division_name != division_name:

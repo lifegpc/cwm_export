@@ -43,6 +43,6 @@ def import_keys(key: str, db: CwmDb, force=False):
             count += 1
         print(f'Imported {count} keys.')
     finally:
-        db._db.commit()
+        db.commit()
         if is_zip:
             z.close()

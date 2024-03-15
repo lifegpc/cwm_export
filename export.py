@@ -94,6 +94,7 @@ def export_book(ncw: NovelCiwei, db: CwmDb, cfg: Config, bn: BooksNew,
         for division in divisions:
             division_name = division['division_name']
             division_id = division['division_id']
+            is_linear = db.get_mark(division_id)
             if cfg.export_txt:
                 txt.write(f"第{division['division_index']}卷 {division_name}\n")
                 if division['description']:
@@ -113,13 +114,15 @@ def export_book(ncw: NovelCiwei, db: CwmDb, cfg: Config, bn: BooksNew,
                         txt.write(f"第{chapter_index}章 {chapter_title}\n")
                         txt.write(content + '\n\n')
                     if cfg.export_epub:
-                        epub.add_chapter(chapter, content, division_name)
+                        epub.add_chapter(chapter, content, division_name,
+                                         is_linear)
                     count += 1
                 elif cfg.export_nodownload:
                     if cfg.export_txt:
                         txt.write(f"第{chapter_index}章 {chapter_title} (未下载)\n\n")  # noqa: E501
                     if cfg.export_epub:
-                        epub.add_nodownload_chapter(chapter, division_name)
+                        epub.add_nodownload_chapter(chapter, division_name,
+                                                    is_linear)
                 chapter_index += 1
         print(f'Exported {count} chapters.')
     finally:
@@ -139,49 +142,114 @@ def export_all(ncw: NovelCiwei, db: CwmDb, cfg: Config, bn: BooksNew):
             print(f'Failed to export book {book_id}: {e}')
 
 
-def export(ncw: NovelCiwei, db: CwmDb, cfg: Config, bn: BooksNew):
-    action = ask_choice(cfg, [], '请选择要导出的类型：', extra=[
-                        ('b', '整本书', 'book'), ('c', '单章', 'chapter'),
-                        ('a', '所有书', 'all')])
-    if action == 'all':
-        export_all(ncw, db, cfg, bn)
-        return
-    books = ncw.get_books()
-    shelfs = {}
-    for book in books:
-        shelf_id = book['shelf_id']
-        if shelf_id in shelfs:
-            shelfs[shelf_id].append(book)
-        else:
-            shelfs[shelf_id] = [book]
+class ExportCli:
+    def __init__(self, ncw: NovelCiwei, db: CwmDb, cfg: Config, bn: BooksNew):
+        self.ncw = ncw
+        self.db = db
+        self.cfg = cfg
+        self.bn = bn
+        self.action = None
+        self.shelf = None
+        self.shelfs = None
+        self.book = None
+        self.book_id = None
+        self.division_id = None
+        self.fns = [self.ask_action]
 
-    def show_shelf(shelf: str):
-        data = f"{shelf} ({len(shelfs[shelf])} 本书)"
-        book = json.loads(choice(shelfs[shelf])['book_info'])
-        data += f"\n书架内有 {book['book_name']} - {book['author_name']}"
-        return data
-    shelf = ask_choice(cfg, [i for i in shelfs.keys()], '请选择书架：', show_shelf,
-                       [('r', '阅读历史', 'readhistory'), ('a', '所有书', 'all')])
-    if shelf == 'readhistory':
-        books = [json.loads(b['book_info']) for b in ncw.get_read_history()]
-    elif shelf == 'all':
-        bookids = [int(b[0]) for b in ncw.get_all_books()]
-        books = []
-        for bid in bookids:
-            book = ncw.get_book_in_shelf(bid) or ncw.get_book_in_readhistory(bid)  # noqa: E501
-            if book:
-                books.append(book)
-    else:
-        books = [json.loads(b['book_info']) for b in shelfs[shelf]]
-    book = ask_choice(cfg, books, '请选择书：', lambda b: f"{b['book_name']} - {b['author_name']}")  # noqa: E501
-    book_id = int(book['book_id'])
-    if action == 'book':
-        export_book(ncw, db, cfg, bn, book_id)
-    elif action == 'chapter':
-        divisions = ncw.get_divisions_with_bookid(book_id)
-        division = ask_choice(cfg, divisions, '请选择卷：', lambda b: b['division_name'])  # noqa: E501
-        division_id = int(division['division_id'])
-        chapters = ncw.get_chapter_with_bookid_division(book_id, division_id)
-        chapter = ask_choice(cfg, chapters, '请选择章节：', lambda b: b['chapter_title'])  # noqa: E501
+    def ask_action(self):
+        self.action = ask_choice(self.cfg, [], '请选择要导出的类型：', extra=[
+            ('b', '整本书', 'book'), ('c', '单章', 'chapter'), ('a', '所有书', 'all'),
+            ('m', '标记为非线性卷', 'mark')])
+        if self.action == 'all':
+            export_all(self.ncw, self.db, self.cfg, self.bn)
+            return
+        self.fns.append(self.ask_shelf)
+
+    def ask_book(self):
+        if self.shelf == 'readhistory':
+            books = [json.loads(b['book_info']) for b in self.ncw.get_read_history()]  # noqa: E501
+        elif self.shelf == 'all':
+            bookids = [int(b[0]) for b in self.ncw.get_all_books()]
+            books = []
+            for bid in bookids:
+                book = self.ncw.get_book_in_shelf(bid) or self.ncw.get_book_in_readhistory(bid)  # noqa: E501
+                if book:
+                    books.append(book)
+        else:
+            books = [json.loads(b['book_info']) for b in self.shelfs[self.shelf]]  # noqa: E501
+        self.book = ask_choice(self.cfg, books, '请选择书：', lambda b: f"{b['book_name']} - {b['author_name']}", [('b', '返回', 'back')])  # noqa: E501
+        if self.book == 'back':
+            self.fns.append(self.ask_shelf)
+            return
+        self.book_id = int(self.book['book_id'])
+        if self.action == 'book':
+            export_book(self.ncw, self.db, self.cfg, self.bn, self.book_id)
+            return
+        self.fns.append(self.ask_division)
+
+    def ask_chapter(self):
+        chapters = self.ncw.get_chapter_with_bookid_division(self.book_id, self.division_id)  # noqa: E501
+        chapter = ask_choice(self.cfg, chapters, '请选择章节：', lambda b: b['chapter_title'], [('b', '返回', 'back')])  # noqa: E501
+        if chapter == 'back':
+            self.fns.append(self.ask_division)
+            return
         chapter_id = int(chapter['chapter_id'])
-        export_chapter(ncw, db, cfg, bn, chapter_id)
+        export_chapter(self.ncw, self.db, self.cfg, self.bn, chapter_id)
+
+    def ask_division(self):
+        divisions = self.ncw.get_divisions_with_bookid(self.book_id)
+        extras = [('b', '返回', 'back')]
+        if self.action == 'mark':
+            extras.append(('q', '退出', 'quit'))
+
+        def show_division(division):
+            name = division['division_name']
+            if self.action == 'mark':
+                division_id = int(division['division_id'])
+                if not self.db.get_mark(division_id):
+                    name += ' (非线性卷)'
+            return name
+        division = ask_choice(self.cfg, divisions, '请选择卷：', show_division, extras)  # noqa: E501
+        if division == 'back':
+            self.fns.append(self.ask_book)
+            return
+        if division == 'quit':
+            return
+        self.division_id = int(division['division_id'])
+        if self.action == 'mark':
+            now = self.db.get_mark(self.division_id)
+            self.db.set_mark(self.division_id, not now)
+            self.fns.append(self.ask_division)
+            return
+        self.fns.append(self.ask_chapter)
+
+    def ask_shelf(self):
+        books = self.ncw.get_books()
+        self.shelfs = {}
+        for book in books:
+            shelf_id = book['shelf_id']
+            if shelf_id in self.shelfs:
+                self.shelfs[shelf_id].append(book)
+            else:
+                self.shelfs[shelf_id] = [book]
+
+        def show_shelf(shelf: str):
+            data = f"{shelf} ({len(self.shelfs[shelf])} 本书)"
+            book = json.loads(choice(self.shelfs[shelf])['book_info'])
+            data += f"\n书架内有 {book['book_name']} - {book['author_name']}"
+            return data
+        self.shelf = ask_choice(self.cfg, [i for i in self.shelfs.keys()],
+                                '请选择书架：', show_shelf,
+                                [('r', '阅读历史', 'readhistory'),
+                                 ('a', '所有书', 'all'),
+                                 ('b', '返回', 'back')])
+        if self.shelf == 'back':
+            self.fns.append(self.ask_action)
+            return
+        self.fns.append(self.ask_book)
+
+    def start(self):
+        while True:
+            if len(self.fns) == 0:
+                break
+            self.fns.pop(0)()

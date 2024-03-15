@@ -64,6 +64,10 @@ class Config:
         return self.get_arg('db', 'cwm.db')
 
     @cached_property
+    def division_id(self):
+        return getattr(self._args, 'division_id', None)
+
+    @cached_property
     def export_book_template(self):
         return self.get_arg('export_book_template', 'exported/<book_name> - <author_name>.<ext>')  # noqa: E501
 
@@ -115,6 +119,10 @@ class Config:
     @cached_property
     def key(self):
         return self.get_arg('key', None)
+
+    @cached_property
+    def linear(self):
+        return getattr(self._args, 'linear', False)
 
     @cached_property
     def page_size(self):

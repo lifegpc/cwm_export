@@ -23,7 +23,9 @@ parser.add_argument('-s', '--page-size', help='Maximum size of a page when askin
 parser.add_argument('-a', '--export-nodownload', help='export not downloaded chapter when exporting book.', type=parse_bool, metavar='BOOL')  # noqa: E501
 parser.add_argument('-i', '--image-type', help='How to handle images in EPUB. Available types: inline, footnote. Default: inline', choices=['inline', 'footnote'], metavar='TYPE')  # noqa: E501
 parser.add_argument('-f', '--force', help='Force import keys.', action='store_true')  # noqa: E501
-parser.add_argument('action', help='The action to do.', choices=['importkey', 'exportchapter', 'exportbook', 'export', 'exportall', 'ik', 'ec', 'eb', 'e', 'ea'], nargs='?', default='export')  # noqa: E501
+parser.add_argument('-D', '--division-id', help='The division id.', type=int, metavar='ID')  # noqa: E501
+parser.add_argument('-l', '--linear', help='Mark as linear.', type=parse_bool, metavar='BOOL', default=False)  # noqa: E501
+parser.add_argument('action', help='The action to do.', choices=['importkey', 'exportchapter', 'exportbook', 'export', 'exportall', 'markaslinear', 'ik', 'ec', 'eb', 'e', 'ea', 'mal'], nargs='?', default='export')  # noqa: E501
 
 
 def main(args=None):
@@ -75,8 +77,9 @@ def main(args=None):
             bn = BooksNew(cfg.booksnew)
             if not cfg.export_epub and not cfg.export_txt:
                 raise ValueError('At least one export type should be specified.')  # noqa: E501
-            from export import export
-            export(ncw, db, cfg, bn)
+            from export import ExportCli
+            export = ExportCli(ncw, db, cfg, bn)
+            export.start()
         elif arg.action == "exportall" or arg.action == "ea":
             if cfg.cwmdb is None:
                 raise ValueError('The cwmdb is not specified.')
@@ -88,6 +91,10 @@ def main(args=None):
                 raise ValueError('At least one export type should be specified.')  # noqa: E501
             from export import export_all
             export_all(ncw, db, cfg, bn)
+        elif arg.action == 'markaslinear' or arg.action == 'mal':
+            if cfg.division_id is None:
+                raise ValueError('The division id is not specified.')
+            db.set_mark(cfg.division_id, cfg.linear)
     finally:
         cfg.save()
 

@@ -139,7 +139,7 @@ def perform_convert(image_path: str) -> Optional[str]:
 
 
 class HTMLImage:
-    def __init__(self, attrs, cfg: Config):
+    def __init__(self, attrs, cfg: Config, chapter_id):
         self.src = None
         self.alt = None
         self.path = None
@@ -151,6 +151,7 @@ class HTMLImage:
                 self.alt = value
         self.cfg = cfg
         self.footnote = ''
+        self.chapter_id = chapter_id
 
     def is_valid(self):
         return self.src is not None and self.src != ''
@@ -185,22 +186,23 @@ class HTMLImage:
         if self.cfg.image_type == 'inline':
             return ET.tostring(img, 'unicode')
         else:
-            link = ET.Element('a', {'href': f'#img{index}',
+            target = ''
+            if self.cfg.add_images_to_single_page:
+                target = f'{self.chapter_id}_img.xhtml'
+            link = ET.Element('a', {'href': f'{target}#img{index}',
                                     'epub:type': 'noteref'})
             if self.alt:
                 link.text = self.alt
             aside = ET.Element('aside', {'epub:type': 'footnote',
                                          'id': f'img{index}'})
-            p = ET.Element('p')
-            p.append(img)
-            aside.append(p)
+            aside.append(img)
             self.footnote = ET.tostring(aside, 'unicode') + '\n'
             return ET.tostring(link, 'unicode')
 
 
 # Used to parse content
 class ContentParser(HTMLParser):
-    def __init__(self, cfg: Config):
+    def __init__(self, cfg: Config, chapter_id):
         super().__init__()
         self._in_paragraph = False
         self.data = []
@@ -210,6 +212,7 @@ class ContentParser(HTMLParser):
         self.cfg = cfg
         self.footnote = ''
         self.img_index = 0
+        self.chapter_id = chapter_id
 
     def handle_data(self, data: str):
         if self._in_paragraph:
@@ -225,7 +228,8 @@ class ContentParser(HTMLParser):
                     self._paragraph_data = [self._paragraph_data]
                 else:
                     self._paragraph_data = []
-                self._paragraph_data.append(HTMLImage(attrs, self.cfg))
+                self._paragraph_data.append(HTMLImage(attrs, self.cfg,
+                                                      self.chapter_id))
             else:
                 self.data.append(HTMLImage(attrs, self.cfg))
         elif tag == 'p':
@@ -289,7 +293,8 @@ class ContentParser(HTMLParser):
         if self._paragraph_data:
             data += f'<p>{self._paragraph_data}</p>\n'
         if default_data_list:
-            data += self.footnote
+            if not self.cfg.add_images_to_single_page:
+                data += self.footnote
         return data
 
 
@@ -355,7 +360,7 @@ class EpubFile:
             uid=f'ch{chapter_id}',
         )
         ch.is_linear = is_linear
-        parser = ContentParser(self.cfg)
+        parser = ContentParser(self.cfg, chapter_id)
         contents = content.splitlines()
         try:
             parser.feed('<p>' + '</p>\n<p>'.join(contents) + '</p>')
@@ -391,6 +396,17 @@ class EpubFile:
         else:
             self.EpubList.append(ch)
         self.epub.spine.append(ch)
+        if self.cfg.add_images_to_single_page and parser.footnote:
+            ch_img = epub.EpubHtml(
+                title=f"{chapter_title} (图片)",
+                file_name=f'{chapter_id}_img.xhtml',
+                lang='zh-CN',
+                uid=f'ch{chapter_id}_img',
+            )
+            ch_img.is_linear = False
+            ch_img.content = parser.footnote
+            self.epub.add_item(ch_img)
+            self.epub.spine.append(ch_img)
 
     def add_nodownload_chapter(self, chapter, division_name: str,
                                is_linear: bool):

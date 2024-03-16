@@ -16,6 +16,7 @@ class Config:
             with open(cfg_path, 'r', encoding='UTF-8') as f:
                 self._data = json.load(f)
         else:
+            self._data['add_images_to_single_page'] = False
             self._data['db'] = 'cwm.db'
             self._data['save_to_config'] = True
             self._data['type'] = 'epub,txt'
@@ -42,6 +43,10 @@ class Config:
             if default is not None:
                 self._data[key] = default
             return default
+
+    @cached_property
+    def add_images_to_single_page(self):
+        return self.get_arg('add_images_to_single_page', False)
 
     @cached_property
     def book_id(self):
@@ -130,7 +135,7 @@ class Config:
 
     @cached_property
     def save_to_config(self):
-        return getattr(self._args, 'save_to_config', True)
+        return getattr(self._data, 'save_to_config', True)
 
     def save(self):
         with open(self._path, 'w', encoding='UTF-8') as f:

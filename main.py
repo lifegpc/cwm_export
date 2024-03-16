@@ -25,6 +25,7 @@ parser.add_argument('-i', '--image-type', help='How to handle images in EPUB. Av
 parser.add_argument('-f', '--force', help='Force import keys.', action='store_true')  # noqa: E501
 parser.add_argument('-D', '--division-id', help='The division id.', type=int, metavar='ID')  # noqa: E501
 parser.add_argument('-l', '--linear', help='Mark as linear.', type=parse_bool, metavar='BOOL', default=False)  # noqa: E501
+parser.add_argument('-A', '--add-images-to-single-page', help='Add images to single page.', type=parse_bool, metavar='BOOL')  # noqa: E501
 parser.add_argument('action', help='The action to do.', choices=['importkey', 'exportchapter', 'exportbook', 'export', 'exportall', 'markaslinear', 'ik', 'ec', 'eb', 'e', 'ea', 'mal'], nargs='?', default='export')  # noqa: E501
 
 

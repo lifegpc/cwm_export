@@ -46,6 +46,8 @@ class CwmDb:
             self.__write_version()
         if 'key' not in self._exist_tables:
             self._db.execute(KEY_TABLE)
+        if 'division' not in self._exist_tables:
+            self._db.execute(DIVISION_TABLE)
         self._db.commit()
 
     def __write_version(self):
